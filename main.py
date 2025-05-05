@@ -113,6 +113,17 @@ def strtobool(val: str | bool):
 
     raise ValueError(f"invalid truth value for {val}")
 
+def format_hours_minutes(seconds: int) -> str:
+    total_minutes = seconds // 60
+    hours, minutes = divmod(total_minutes, 60)
+
+    units = [
+        (hours, "hrs"),
+        (minutes, "mins"),
+    ]
+
+    parts = [f"{val} {label}" for val, label in units if val > 0]
+    return ' '.join(parts) if parts else "0 mins"
 
 ################### data ###################
 
@@ -129,7 +140,8 @@ class WakaInput:
     # # required
     gh_token: str | None = os.getenv("INPUT_GH_TOKEN")
     waka_key: str | None = os.getenv("INPUT_WAKATIME_API_KEY")
-    api_base_url: str | None = os.getenv("INPUT_API_BASE_URL", "https://wakatime.com/api")
+    slack_user_id: str | None = os.getenv("INPUT_SLACK_USER_ID")
+    #api_base_url: str | None = os.getenv("INPUT_API_BASE_URL", "https://wakatime.com/api")
     repository: str | None = os.getenv("INPUT_REPOSITORY")
     # # depends
     commit_message: str = os.getenv(
@@ -161,7 +173,7 @@ class WakaInput:
     def validate_input(self):
         """Validate Input Env Variables."""
         logger.debug("Validating input variables")
-        if not self.gh_token or not self.waka_key or not self.api_base_url or not self.repository:
+        if not self.gh_token or not self.waka_key or not self.slack_user_id or not self.repository:
             logger.error("Invalid inputs")
             logger.info("Refer https://github.com/athul/waka-readme")
             return False
@@ -296,16 +308,7 @@ def prep_content(stats: dict[str, Any], /):
 
     # make title
     if wk_i.show_title:
-        contents += make_title(stats.get("start"), stats.get("end")) + "\n\n"
-
-    # make byline
-    if wk_i.show_masked_time and (
-        total_time := stats.get("human_readable_total_including_other_language")
-    ):
-        # overrides "human_readable_total"
-        contents += f"Total Time: {total_time}\n\n"
-    elif wk_i.show_total_time and (total_time := stats.get("human_readable_total")):
-        contents += f"Total Time: {total_time}\n\n"
+        contents += make_title(stats.get("from"), stats.get("to")) + "\n\n"
 
     lang_info: list[dict[str, int | float | str]] | None = []
 
@@ -318,7 +321,7 @@ def prep_content(stats: dict[str, Any], /):
     # make lang content
     pad_len = len(
         # comment if it feels way computationally expensive
-        max((str(lng["name"]) for lng in lang_info), key=len)
+        max((str(lng["key"]) for lng in lang_info), key=len)
         # and then do not for get to set `pad_len` to say 13 :)
     )
     language_count, stop_at_other = int(wk_i.language_count), bool(wk_i.stop_at_other)
@@ -329,14 +332,23 @@ def prep_content(stats: dict[str, Any], /):
         )
         return contents.rstrip("\n")
 
+    languages: dict[str, int] = {}
+    total_time = 0
+    for _, lang in enumerate(lang_info):
+        lang_name = str(lang["key"])
+        lang_total_time = int(lang["total"])
+        languages[lang_name] = lang_total_time
+        total_time += lang_total_time
+    contents += f"Total Time: {format_hours_minutes(total_time)}\n\n"
+
     ignored_languages = set(_extract_ignored_languages())
     logger.debug(f"Ignoring {', '.join(ignored_languages)}")
-    for idx, lang in enumerate(lang_info):
-        lang_name = str(lang["name"])
+    idx = 0
+    for lang_name, lang_total_time in languages.items():
         if lang_name in ignored_languages:
             continue
-        lang_time = str(lang["text"]) if wk_i.show_time else ""
-        lang_ratio = float(lang["percent"])
+        lang_time = format_hours_minutes(lang_total_time) if wk_i.show_time else ""
+        lang_ratio = (lang_total_time / total_time) * 100
         lang_bar = make_graph(wk_i.block_style, lang_ratio, wk_i.graph_length, lang_name)
         contents += (
             f"{lang_name.ljust(pad_len)}   "
@@ -350,6 +362,7 @@ def prep_content(stats: dict[str, Any], /):
             break
         if idx + 1 >= language_count > 0:  # idx starts at 0
             break
+        idx += 1
 
     logger.debug("Contents were made\n")
     return contents.rstrip("\n")
@@ -369,7 +382,7 @@ def fetch_stats():
         # making a request
         if (
             resp := rq_get(
-                url=f"{str(wk_i.api_base_url).rstrip('/')}/v1/users/current/stats/{wk_i.time_range}",
+                url=f"https://hackatime.hackclub.com/api/summary?user={wk_i.slack_user_id}",
                 headers={
                     "Authorization": f"Basic {encoded_key}",
                     "User-Agent": fake_ua,
@@ -393,7 +406,7 @@ def fetch_stats():
         sys.exit(1)
 
     print()
-    return statistic.get("data")
+    return statistic
 
 
 def churn(old_readme: str, /):

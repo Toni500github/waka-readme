@@ -2,6 +2,7 @@ FROM docker.io/python:3-slim
 
 ENV INPUT_GH_TOKEN \
     INPUT_WAKATIME_API_KEY \
+    INPUT_SLACK_USER_ID \
     # meta
     INPUT_API_BASE_URL \
     INPUT_REPOSITORY \

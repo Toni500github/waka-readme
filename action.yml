@@ -10,6 +10,9 @@ inputs:
   WAKATIME_API_KEY:
     description: "Your Wakatime/Wakapi/Hakatime API Key"
     required: true
+  SLACK_USER_ID:
+    description: "Your slack user ID"
+    required: true
 
   # meta tweaks
   API_BASE_URL:
