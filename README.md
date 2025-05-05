@@ -1,3 +1,6 @@
+# THIS IS A FORK ONLY FOR HACKATIME V2
+# ALL CREDITS TO THE ORIGINAL SOURCE CODE GOES TO https://github.com/athul/waka-readme
+
 <p align="center">
   <img
     src="https://socialify.git.ci/athul/waka-readme/image?description=1&font=Source%20Code%20Pro&forks=1&issues=1&name=1&owner=1&pulls=1&stargazers=1&theme=Auto"
@@ -51,7 +54,7 @@ A GitHub repository and a `README.md` file is required. We'll be making use of r
   `<!--START_SECTION: -->` and `<!--END_SECTION: -->` are placeholders and must be retained as is. Whereas "`waka`" can be replaced by any alphanumeric string. See [#Tweaks](#tweaks) section for more.
 
 - Navigate to your repo's `Settings`:
-  - Go to `Secrets` (at `https://github.com/USERNAME/USERNAME/settings/secrets/actions/new` by replacing the `USERNAME` with your own username) and add a new secret "_Named_" `WAKATIME_API_KEY` with your API key as it's "_Secret_".
+  - Go to `Secrets` (at `https://github.com/USERNAME/USERNAME/settings/secrets/actions/new` by replacing the `USERNAME` with your own username) and add a new secret "_Named_" `SLACK_USER_ID` with your slack user ID as its "_Secret_".
 
     <!-- prettier-ignore-start -->
     <picture>
@@ -95,10 +98,8 @@ A GitHub repository and a `README.md` file is required. We'll be making use of r
       steps:
         - uses: athul/waka-readme@master # this action name
           with:
-            WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }}
+            SLACK_USER_ID: ${{ secrets.SLACK_USER_ID }}
   ```
-
-  Refer [#Example](#example) section for a full blown workflow file.
 
 ## Tweaks
 
@@ -164,7 +165,7 @@ jobs:
       - uses: athul/waka-readme@master # do NOT replace with anything else
         with:
           GH_TOKEN: ${{ secrets.GH_TOKEN }} # optional if on profile readme
-          WAKATIME_API_KEY: ${{ secrets.WAKATIME_API_KEY }} # required
+          SLACK_USER_ID: ${{ secrets.SLACK_USER_ID }} # required
           ### meta
           API_BASE_URL: https://wakatime.com/api # optional
           REPOSITORY: YOUR_GITHUB_USERNAME/YOUR_REPOSITORY_NAME # optional
@@ -214,7 +215,7 @@ Other              47 hrs 58 mins  >------------------------   03.05 %
 
 - Flags `REPOSITORY` and `GH_TOKEN` are required ONLY if, you are NOT using [profile readme][profile_readme].
 - If you are using `GH_TOKEN`, make sure set the [fine grained token](https://github.com/settings/tokens?type=beta) scope to repository contents with `read-and-write` access. See [#141 (comment)](https://github.com/athul/waka-readme/issues/141#issuecomment-1679831949).
-- `WAKATIME_API_KEY` is a **required** secret. All other environment variables are optional.
+- `SLACK_USER_ID` is a **required** secret. All other environment variables are optional.
 - The above example does NOT show proper default values, refer [#Tweaks](#tweaks) for the same.
 - `IGNORED_LANGUAGES` is suggested for [.NET](https://dotnet.microsoft.com) users, as WakaTime assumes you're working with `Binary`, while debugging.
 
