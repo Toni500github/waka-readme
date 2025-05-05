@@ -141,7 +141,7 @@ class WakaInput:
     gh_token: str | None = os.getenv("INPUT_GH_TOKEN")
     waka_key: str | None = os.getenv("INPUT_WAKATIME_API_KEY")
     slack_user_id: str | None = os.getenv("INPUT_SLACK_USER_ID")
-    #api_base_url: str | None = os.getenv("INPUT_API_BASE_URL", "https://wakatime.com/api")
+    api_base_url: str | None = os.getenv("INPUT_API_BASE_URL", "https://wakatime.com/api")
     repository: str | None = os.getenv("INPUT_REPOSITORY")
     # # depends
     commit_message: str = os.getenv(
@@ -173,7 +173,7 @@ class WakaInput:
     def validate_input(self):
         """Validate Input Env Variables."""
         logger.debug("Validating input variables")
-        if not self.gh_token or not self.waka_key or not self.slack_user_id or not self.repository:
+        if not self.gh_token or not self.slack_user_id or not self.repository:
             logger.error("Invalid inputs")
             logger.info("Refer https://github.com/athul/waka-readme")
             return False
